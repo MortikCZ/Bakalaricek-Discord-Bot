@@ -41,3 +41,6 @@ Tento bot umožňuje skrze [bakapi-v2](https://github.com/MortikCZ/bakapi-v2), k
 ```
     py main.py
 ```
+## Changelog
+### 0.1
+- První release 
