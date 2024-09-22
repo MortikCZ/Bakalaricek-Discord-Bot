@@ -1,5 +1,5 @@
 # Bakalaricek Discord Bot
-Discord Bot pro zobrazování suplování a změn v rozvrhu z Bakalářů v jazyce Python.
+Discord Bot pro zobrazování suplování, aktuálního rozvrhu a jeho změn z Bakalářů v jazyce Python.
 
 Tento bot umožňuje skrze [bakapi-v2](https://github.com/MortikCZ/bakapi-v2), komunikovat s Bakaláři API a získavat informace o suplování, dokáže v předem určeném kanálu zobrazovat suplování pro aktuální týden a posílat upozornění na změny v rozvrhu.
 
@@ -33,6 +33,7 @@ Tento bot umožňuje skrze [bakapi-v2](https://github.com/MortikCZ/bakapi-v2), k
     },
     "discord": {
         "substitutions_channel_id": kanál pro zobrazení suplování,
+        "timetable_channel_id": kanál pro zobrazení rozvrhu,
         "subst_change_channel_id": kanál pro oznámení změn v rozvrhu,
         "subst_change_role_id": role pro oznámení změn v rozvrhu
     }
@@ -42,5 +43,8 @@ Tento bot umožňuje skrze [bakapi-v2](https://github.com/MortikCZ/bakapi-v2), k
     py main.py
 ```
 ## Changelog
+### 0.2
+- Přídán embed pro zobrazení rozvrhu pro aktuální den.
+- Přídána možnost nastavení statusu bota pomocí příkazu /status <status>
 ### 0.1
 - První release 
