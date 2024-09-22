@@ -27,6 +27,7 @@ bot = commands.Bot(command_prefix='/', intents=intents)
 async def on_ready():
     substitutions_embed.start()
     check_timetable.start()
+    daily_timetable_embed.start()
 
 CONFIG_FILE = 'config.json'
 
@@ -51,6 +52,65 @@ def save_previous_timetable(timetable):
         json.dump(timetable, file, indent=4)
 
 previous_timetable = load_previous_timetable()
+
+@tasks.loop(minutes=30)
+async def daily_timetable_embed():
+    config = load_config()
+    if 'discord' not in config or 'timetable_channel_id' not in config['discord']:
+        return
+    channel_id = config['discord']['timetable_channel_id']
+    channel = bot.get_channel(channel_id)
+    if channel is None:
+        return
+
+    current_date = datetime.today().date()
+    if current_date.weekday() > 4: 
+        current_date = get_next_weekday(current_date)
+
+    current_date_str = current_date.strftime("%Y-%m-%d")
+    current_date_display = current_date.strftime("%d.%m.")
+
+    timetable = bakalari_user.get_timetable_actual(date=current_date_str)
+
+    subjects = {subject['Id']: subject['Name'] for subject in timetable['Subjects']}
+    teachers = {teacher['Id']: teacher['Name'] for teacher in timetable['Teachers']}
+
+    hodiny = "\U0001F552"
+    embed = discord.Embed(title=f"{hodiny} Aktuální rozvrh ({current_date_display})", color=0x02a2e2)
+
+    vlajka_startu = "\U0001F6A9"
+    vlajka_cile = "\U0001F3C1"
+    kniha = "\U0001F4DA"
+    ucitel = "\U0001F468\u200D\U0001F3EB"
+    for day in timetable['Days']:
+        if day['Date'].split('T')[0] == current_date_str:
+            for atom in day['Atoms']:
+                for hour in timetable['Hours']:
+                    if hour['Id'] == atom['HourId']:
+                        subject_name = subjects.get(atom['SubjectId'], 'Unknown')
+                        teacher_name = teachers.get(atom['TeacherId'], 'Unknown') if atom['TeacherId'] else 'Unknown'
+                        if subject_name == 'Unknown' and teacher_name == 'Unknown':
+                            continue 
+                        embed.add_field(name=f"Hodina č.{hour['Caption']}", 
+                                        value=f"{vlajka_startu}: {hour['BeginTime']}\n{vlajka_cile}: {hour['EndTime']}\n{kniha}: {subject_name}\n{ucitel}: {teacher_name}", 
+                                        inline=False)
+
+    now = datetime.now()
+    embed.set_footer(text=f"Poslední update: {now.strftime('%d.%m. %H:%M:%S')}")
+
+    if 'timetable_message_id' in config['discord'] and config['discord']['timetable_message_id'] is not None:
+        try:
+            message_id = config['discord']['timetable_message_id']
+            message = await channel.fetch_message(message_id)
+            await message.edit(embed=embed)
+        except discord.NotFound:
+            message = await channel.send(embed=embed)
+            config['discord']['timetable_message_id'] = message.id
+            save_config(config)
+    else:
+        message = await channel.send(embed=embed)
+        config['discord']['timetable_message_id'] = message.id
+        save_config(config)
 
 def get_next_weekday(date):
     while date.weekday() >= 5:  
@@ -160,5 +220,16 @@ async def check_timetable():
 
     previous_timetable = changes
     save_previous_timetable(previous_timetable)
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def status(ctx, *, new_status: str):
+    await bot.change_presence(activity=discord.Game(name=new_status))
+    await ctx.send(f"Status: {new_status}")
+
+@status.error
+async def status_error(ctx, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send("Pro tuto akci nemáš dostatečná oprávnění.")
 
 bot.run(BOT_TOKEN)
