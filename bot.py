@@ -28,6 +28,8 @@ async def on_ready():
     substitutions_embed.start()
     check_timetable.start()
     daily_timetable_embed.start()
+    if 'status' in config['bot']:
+        await bot.change_presence(activity=discord.Game(name=config['bot']['status']))
 
 CONFIG_FILE = 'config.json'
 
@@ -225,6 +227,9 @@ async def check_timetable():
 @commands.has_permissions(administrator=True)
 async def status(ctx, *, new_status: str):
     await bot.change_presence(activity=discord.Game(name=new_status))
+    config = load_config()
+    config['bot']['status'] = new_status
+    save_config(config)
     await ctx.send(f"Status: {new_status}")
 
 @status.error

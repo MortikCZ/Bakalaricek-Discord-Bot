@@ -43,6 +43,8 @@ Tento bot umožňuje skrze [bakapi-v2](https://github.com/MortikCZ/bakapi-v2), k
     py main.py
 ```
 ## Changelog
+### 0.3
+- Status se nově ukládá do souboru `config.json` a při restartu bota se načte poslední status.
 ### 0.2
 - Přídán embed pro zobrazení rozvrhu pro aktuální den.
 - Přídána možnost nastavení statusu bota pomocí příkazu /status <status>
